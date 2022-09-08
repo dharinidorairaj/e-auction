@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  auc-app
+
+  Sample SAM Template for auc-app
+Globals:
+  Function:
+    Runtime: java8
+    MemorySize: 512
+    Timeout: 30
+    Environment:
+      Variables:
+        PRODUCTS_TABLE: !Ref ProductsTable
+
+Resources:
+  ProductsTable: 
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: Number
+  AddProductFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: AuctionAPI
+      Handler: com.aws.lambda.apis.createProductLambda::createProduct
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ProductsTable      
+      Events:
+        ProductEvents:
+          Type: Api
+          Properties:
+            Path: /products
+            Method: POST
+  ReadProductsFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: AuctionAPI
+      Handler: com.aws.lambda.apis.ReadProductsLambda::getProducts
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ProductsTable      
+      Events:
+        ProductEvents:
+          Type: Api
+          Properties:
+            Path: /products
+            Method: GET
+      
